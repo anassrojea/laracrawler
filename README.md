@@ -53,7 +53,7 @@ composer require anassrojea/laracrawler
 Publish config:
 
 ```bash
-php artisan vendor:publish --tag=sitemap-config
+php artisan vendor:publish --tag=laracrawler-config
 ```
 
 ---
@@ -63,7 +63,7 @@ php artisan vendor:publish --tag=sitemap-config
 Generate sitemap:
 
 ```bash
-php artisan sitemap:generate
+php artisan laracrawler:generate
 ```
 
 Options:
