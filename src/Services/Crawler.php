@@ -481,13 +481,12 @@ class Crawler
         }
 
         // <a href="...jpg|png|webp">
-        $images = array_merge(
-            $images,
+        $aImages = array_filter(
             $dom->filter('a')->each(function ($node) {
                 $href = $node->attr('href');
                 if ($href && preg_match('#\.(jpg|jpeg|png|gif|webp|svg)$#i', $href)) {
                     return [
-                        'src' => $href,
+                        'src'     => $href,
                         'title'   => $node->attr('title')
                             ?? config('sitemap.image_defaults.title', 'Image Title'),
                         'caption' => $node->attr('alt')
@@ -497,6 +496,8 @@ class Crawler
                 return null;
             })
         );
+
+        $images = array_merge($images, array_values($aImages));
 
         // ✅ Ensure uniqueness by src
         $unique = [];
