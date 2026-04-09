@@ -124,8 +124,17 @@ class GenerateSitemapCommand extends Command
         // ✅ Handle flags
         if ($this->option('single')) {
             $this->info("Forcing single sitemap.xml...");
-            $xml = $writer->buildSitemap($urls);
+            $xml = $writer->buildSitemap($urls, $crawler->getLinkGraph());
             $xml->asXML(rtrim($outputDir, '/') . '/sitemap.xml');
+
+            $sitemapUrl = rtrim(config('sitemap.base_url'), '/') . '/sitemap.xml';
+            $this->handlePing(
+                $writer,
+                $sitemapUrl,
+                "✅ Sitemaps generated and search engines notified.",
+                "✅ Sitemaps generated (ping skipped)."
+            );
+
             return self::SUCCESS;
         }
 
@@ -135,7 +144,7 @@ class GenerateSitemapCommand extends Command
         }
 
         // ✅ Default behavior
-        $writer->write($urls, $outputDir);
+        $writer->write($urls, $outputDir, $crawler->getLinkGraph());
         $this->info("✅ Sitemaps generated in: \"{$outputDir}\"");
 
         if (($this->option('validate') || config('sitemap.validate_links'))) {
@@ -155,11 +164,9 @@ class GenerateSitemapCommand extends Command
             }
         }
 
-        // ✅ Build sitemap URL
+        // ✅ Build sitemap URL (--single handled above with early return)
         $sitemapUrl = rtrim(config('sitemap.base_url'), '/');
-        if ($this->option('single')) {
-            $sitemapUrl .= '/sitemap.xml';
-        } elseif ($this->option('split')) {
+        if ($this->option('split')) {
             $sitemapUrl .= '/sitemap-index.xml';
         } else {
             $sitemapUrl .= config('sitemap.use_index') ? '/sitemap-index.xml' : '/sitemap.xml';

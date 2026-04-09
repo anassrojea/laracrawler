@@ -20,7 +20,7 @@ class XmlWriter
      *
      * @throws \Exception If a sitemap file exceeds 50MB limit
      */
-    public function write(array $urls, string $outputDir): void
+    public function write(array $urls, string $outputDir, array $linkGraph = []): void
     {
         $maxUrls  = config('sitemap.max_urls_per_sitemap', 50000);
         $maxSize  = config('sitemap.max_file_size', 52428800); // 50MB
@@ -33,7 +33,7 @@ class XmlWriter
             $filename = "sitemap-" . ($i + 1) . ".xml"; // ✅ use dash
             $path = rtrim($outputDir, '/') . '/' . $filename;
 
-            $xml = $this->buildSitemap($chunk);
+            $xml = $this->buildSitemap($chunk, $linkGraph);
             $xml->asXML($path);
 
             // ✅ File size check
@@ -69,9 +69,10 @@ class XmlWriter
      * Includes images and videos if configured in the sitemap config.
      *
      * @param array $urls Array of URLs to include in the sitemap
+     * @param array $linkGraph Optional pre-built link graph (url => inbound link count)
      * @return \SimpleXMLElement The sitemap XML document
      */
-    public function buildSitemap(array $urls): \SimpleXMLElement
+    public function buildSitemap(array $urls, array $linkGraph = []): \SimpleXMLElement
     {
         $namespaces = [
             'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
@@ -94,7 +95,7 @@ class XmlWriter
                 '<urlset ' . implode(' ', $namespaces) . '/>'
         );
 
-        $linkGraph = app(\Anassrojea\Laracrawler\Services\Crawler::class)->getLinkGraph();
+        // $linkGraph is injected as a parameter; defaults to [] when not provided.
 
         foreach ($urls as $entry) {
             if ($this->isExcluded($entry['url'])) {
