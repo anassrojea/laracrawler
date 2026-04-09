@@ -54,10 +54,16 @@ class CrawlUrlJob implements ShouldQueue
         $lock = Cache::lock($lockKey, 10);
         try {
             $lock->block(5);
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            // Could not acquire lock within 5 s; re-queue for a later attempt.
+            $this->release(5);
+            return;
+        }
 
+        try {
             $visited = Cache::get($visitedKey, []);
             if (in_array($this->url, $visited, true)) {
-                // Already crawled by another job; skip.
+                // Already crawled by another job; skip (finally releases lock).
                 return;
             }
             $visited[] = $this->url;
@@ -77,7 +83,13 @@ class CrawlUrlJob implements ShouldQueue
         $lock = Cache::lock($lockKey, 10);
         try {
             $lock->block(5);
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            // Could not acquire lock within 5 s; re-queue for a later attempt.
+            $this->release(5);
+            return;
+        }
 
+        try {
             $existing = Cache::get($cacheKey, []);
             Cache::put($cacheKey, array_merge($existing, $results), $ttl); // DATA-04: TTL applied
         } finally {
