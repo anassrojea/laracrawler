@@ -71,7 +71,7 @@ class XmlWriter
      * @param array $urls Array of URLs to include in the sitemap
      * @return \SimpleXMLElement The sitemap XML document
      */
-    protected function buildSitemap(array $urls): \SimpleXMLElement
+    public function buildSitemap(array $urls): \SimpleXMLElement
     {
         $namespaces = [
             'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',

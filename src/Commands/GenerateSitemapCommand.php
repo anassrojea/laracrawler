@@ -36,7 +36,7 @@ class GenerateSitemapCommand extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $writer = app(\Anassrojea\Laracrawler\Services\XmlWriter::class);
 
@@ -50,7 +50,7 @@ class GenerateSitemapCommand extends Command
 
                     if (!file_exists($sitemapPath)) {
                         $this->error("❌ Custom sitemap file not found at: {$sitemapPath}");
-                        return;
+                        return self::FAILURE;
                     }
 
                     $sitemapUrl = rtrim(config('sitemap.base_url'), '/') . '/' . ltrim($custom, '/');
@@ -59,7 +59,7 @@ class GenerateSitemapCommand extends Command
 
                     if (!file_exists($sitemapPath)) {
                         $this->error("❌ Sitemap file not found at: {$sitemapPath}");
-                        return;
+                        return self::FAILURE;
                     }
 
                     $sitemapUrl = rtrim(config('sitemap.base_url'), '/') . (config('sitemap.use_index') ? '/sitemap-index.xml' : '/sitemap.xml');
@@ -75,7 +75,7 @@ class GenerateSitemapCommand extends Command
             } catch (\Exception $e) {
                 $this->error("❌ Failed to ping search engines: " . $e->getMessage());
             }
-            return;
+            return self::SUCCESS;
         }
 
         // ✅ Handle depth override
@@ -94,7 +94,7 @@ class GenerateSitemapCommand extends Command
             app(\Anassrojea\Laracrawler\Services\Crawler::class)->crawlQueued(config('sitemap.base_url'), $maxDepth);
             $this->info("✅ Crawl jobs dispatched. The sitemap will be finalized automatically once all jobs complete.");
             $this->line("   👉 Make sure your queue worker is running: php artisan queue:work");
-            return;
+            return self::SUCCESS;
         }
 
         // ✅ Normal synchronous crawl
@@ -126,7 +126,7 @@ class GenerateSitemapCommand extends Command
             $this->info("Forcing single sitemap.xml...");
             $xml = $writer->buildSitemap($urls);
             $xml->asXML(rtrim($outputDir, '/') . '/sitemap.xml');
-            return;
+            return self::SUCCESS;
         }
 
         if ($this->option('split')) {
@@ -172,5 +172,7 @@ class GenerateSitemapCommand extends Command
             "✅ Sitemaps generated and search engines notified.",
             "✅ Sitemaps generated (ping skipped)."
         );
+
+        return self::SUCCESS;
     }
 }
