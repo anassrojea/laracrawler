@@ -32,8 +32,7 @@ trait Pingable
     protected function handlePing($writer, string $sitemapUrl, string $successMsg = '✅ Sitemaps finalized and search engines notified.', string $skipMsg = '✅ Sitemaps finalized (ping skipped).')
     {
         try {
-            $noPing = method_exists($this, 'option') && $this->option('no-ping');
-            if (!$noPing && config('sitemap.ping', false)) {
+            if ($this->shouldPing()) {
                 $writer->pingSearchEngines($sitemapUrl);
 
                 if (method_exists($this, 'info')) {
