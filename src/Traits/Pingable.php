@@ -7,20 +7,23 @@ trait Pingable
     /**
      * Checks if pinging search engines is allowed.
      *
+     * Returns false in job contexts where option() is unavailable.
+     *
      * @return bool true if pinging is allowed, false otherwise
      */
     protected function shouldPing(): bool
     {
-        return config('sitemap.ping', false) && !$this->option('no-ping');
+        $noPing = method_exists($this, 'option') && $this->option('no-ping');
+        return config('sitemap.ping', false) && !$noPing;
     }
 
     /**
      * Pings search engines with the sitemap URL.
      *
-     * @param \Anassrojea\Laracrawler\Writer $writer
+     * @param \Anassrojea\Laracrawler\Services\XmlWriter $writer
      * @param string $sitemapUrl
-     * @param string $successMsg [optional] The message to log if pinging is successful. Defaults to '✅ Sitemaps finalized and search engines notified.'.
-     * @param string $skipMsg [optional] The message to log if pinging is skipped. Defaults to '✅ Sitemaps finalized (ping skipped).'.
+     * @param string $successMsg
+     * @param string $skipMsg
      *
      * @return void
      *
@@ -29,7 +32,8 @@ trait Pingable
     protected function handlePing($writer, string $sitemapUrl, string $successMsg = '✅ Sitemaps finalized and search engines notified.', string $skipMsg = '✅ Sitemaps finalized (ping skipped).')
     {
         try {
-            if (!$this->option('no-ping') && config('sitemap.ping', false)) {
+            $noPing = method_exists($this, 'option') && $this->option('no-ping');
+            if (!$noPing && config('sitemap.ping', false)) {
                 $writer->pingSearchEngines($sitemapUrl);
 
                 if (method_exists($this, 'info')) {
