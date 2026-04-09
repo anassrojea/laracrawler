@@ -62,5 +62,6 @@ class FinalizeSitemapJob implements ShouldQueue
         );
 
         Cache::forget('laracrawler:results');
+        Cache::forget('laracrawler:visited');
     }
 }
