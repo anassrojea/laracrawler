@@ -36,18 +36,52 @@ class CrawlUrlJob implements ShouldQueue
     /**
      * Handle the job.
      *
-     * This job will crawl the given URL and store the results in cache.
+     * Checks global visited set before crawling to avoid duplicate work (DATA-03),
+     * uses an atomic cache lock to merge results without race conditions (DATA-02),
+     * and applies a TTL to both cache keys so stale data expires (DATA-04).
      *
      * @param Crawler $crawler
      * @return void
      */
     public function handle(Crawler $crawler): void
     {
+        $cacheKey   = 'laracrawler:results';
+        $visitedKey = 'laracrawler:visited';
+        $lockKey    = 'laracrawler:lock';
+        $ttl        = 3600; // 1 hour — DATA-04
+
+        // DATA-03: Check and register this URL in the global visited set atomically.
+        $lock = Cache::lock($lockKey, 10);
+        try {
+            $lock->block(5);
+
+            $visited = Cache::get($visitedKey, []);
+            if (in_array($this->url, $visited, true)) {
+                // Already crawled by another job; skip.
+                return;
+            }
+            $visited[] = $this->url;
+            Cache::put($visitedKey, $visited, $ttl);
+        } finally {
+            $lock->release();
+        }
+
+        // Crawl the URL (outside the lock — this is the slow network operation).
         $results = $crawler->crawl($this->url, $this->depth, $this->maxDepth);
 
-        // Store results in cache
-        $cacheKey = "laracrawler:results";
-        $existing = Cache::get($cacheKey, []);
-        Cache::put($cacheKey, array_merge($existing, $results));
+        if (empty($results)) {
+            return;
+        }
+
+        // DATA-02: Merge results atomically using a lock to prevent race conditions.
+        $lock = Cache::lock($lockKey, 10);
+        try {
+            $lock->block(5);
+
+            $existing = Cache::get($cacheKey, []);
+            Cache::put($cacheKey, array_merge($existing, $results), $ttl); // DATA-04: TTL applied
+        } finally {
+            $lock->release();
+        }
     }
 }
