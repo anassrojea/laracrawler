@@ -461,7 +461,7 @@ class Crawler
             $srcset = $node->attr('srcset');
             if (!$srcset) return [];
             return array_map(
-                fn($s) => fn($s) => [
+                fn($s) => [
                     'src'   => trim(preg_replace('/\s+\d+[wx]$/', '', $s)),
                     'title'   => $node->attr('title')
                         ?? config('sitemap.image_defaults.title', 'Image Title'),
