@@ -36,7 +36,7 @@ trait Excludable
 
             // ✅ Regex pattern
             if (preg_match('/^#.*#$/', $excluded)) {
-                if (@preg_match($excluded, $path)) {
+                if ($this->safePreg($excluded, $path)) {
                     $this->debugExclusion($url, "regex {$excluded}");
                     return true;
                 }
@@ -96,6 +96,42 @@ trait Excludable
      *
      * @return void
      */
+    /**
+     * Safe wrapper around preg_match that throws on invalid patterns (SEC-03).
+     *
+     * PHP emits E_WARNING (not an exception) when a regex pattern is malformed.
+     * The @ suppression operator silences the warning and returns false, causing
+     * URLs to silently pass exclusion checks when a developer provides a bad regex.
+     * This helper converts the E_WARNING into an \InvalidArgumentException so the
+     * misconfiguration surfaces immediately at first use.
+     *
+     * Only use this for user-supplied patterns from config. Hardcoded literal
+     * patterns (e.g. '#^(tel:|mailto:|javascript:)#i') use plain preg_match.
+     *
+     * @param string $pattern User-supplied regex pattern from config.
+     * @param string $subject The string to match against.
+     * @return bool True if pattern matches, false otherwise.
+     * @throws \InvalidArgumentException If the pattern is invalid.
+     */
+    protected function safePreg(string $pattern, string $subject): bool
+    {
+        $error = null;
+        set_error_handler(static function (int $errno, string $errstr) use (&$error): bool {
+            $error = $errstr;
+            return true;
+        });
+        $result = preg_match($pattern, $subject);
+        restore_error_handler();
+
+        if ($error !== null) {
+            throw new \InvalidArgumentException(
+                "LaraCrawler: Invalid regex pattern in config — {$error} (pattern: {$pattern})"
+            );
+        }
+
+        return (bool) $result;
+    }
+
     protected function summarizeExclusions(): void
     {
         if (empty($this->excludedUrls)) {
