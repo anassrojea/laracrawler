@@ -33,6 +33,11 @@
             "Anassrojea\\Laracrawler\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "prefer-stable": true,
     "require": {
         "php": "^8.0",
@@ -47,5 +52,8 @@
                 "Anassrojea\\Laracrawler\\LaraCrawlerServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.17"
     }
 }
