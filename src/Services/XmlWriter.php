@@ -13,6 +13,16 @@ class XmlWriter
     use Excludable;
 
     /**
+     * Hostnames permitted as ping targets (SSRF allowlist — SEC-02).
+     */
+    protected array $allowedPingHosts = [
+        'www.google.com',
+        'www.bing.com',
+        'webmaster.yandex.com',
+        'api.indexnow.org',
+    ];
+
+    /**
      * Write sitemap files to the given output directory.
      *
      * @param array $urls Array of URLs to include in the sitemap
@@ -326,27 +336,43 @@ class XmlWriter
             return;
         }
 
+        $client = new Client([
+            'timeout'         => 5,
+            'connect_timeout' => 3,
+            'verify'          => true,
+            'http_errors'     => false,
+            'allow_redirects' => false,
+        ]);
+
         $engines = config('sitemap.ping_targets', []);
 
         foreach ($engines as $name => $endpoint) {
-            $url = $endpoint . urlencode($sitemapUrl);
+            $pingUrl = $endpoint . urlencode($sitemapUrl);
+            $host    = parse_url($pingUrl, PHP_URL_HOST);
+
+            if (!in_array($host, $this->allowedPingHosts, true)) {
+                \Log::warning("LaraCrawler: Ping skipped — host not in allowlist", [
+                    'name' => $name,
+                    'host' => $host,
+                ]);
+                continue;
+            }
 
             try {
-                file_get_contents($url);
-
-                // ✅ Console + Log
-                echo "✅ Pinged {$name}: {$url}\n";
+                $response = $client->get($pingUrl);
+                $status   = $response->getStatusCode();
+                echo "Pinged {$name}: {$pingUrl} (HTTP {$status})\n";
                 \Log::info("LaraCrawler: Successfully pinged {$name}", [
-                    'url' => $sitemapUrl,
-                    'endpoint' => $url,
+                    'url'      => $sitemapUrl,
+                    'endpoint' => $pingUrl,
+                    'status'   => $status,
                 ]);
-            } catch (\Exception $e) {
-                // ⚠️ Console + Log
-                echo "⚠️ Failed to ping {$name}: {$e->getMessage()}\n";
+            } catch (\Throwable $e) {
+                echo "Failed to ping {$name}: {$e->getMessage()}\n";
                 \Log::error("LaraCrawler: Failed to ping {$name}", [
-                    'url' => $sitemapUrl,
-                    'endpoint' => $url,
-                    'error' => $e->getMessage(),
+                    'url'      => $sitemapUrl,
+                    'endpoint' => $pingUrl,
+                    'error'    => $e->getMessage(),
                 ]);
             }
         }
