@@ -55,5 +55,9 @@
     },
     "require-dev": {
         "orchestra/testbench": "^9.17"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --exclude-group smoke",
+        "test:smoke": "vendor/bin/phpunit --group smoke"
     }
 }
