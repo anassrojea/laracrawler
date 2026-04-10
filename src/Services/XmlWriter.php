@@ -408,7 +408,7 @@ class XmlWriter
         foreach ($rules as $pattern => $rule) {
             // ✅ Regex pattern
             if (preg_match('/^#.*#$/', $pattern)) {
-                if (@preg_match($pattern, $path)) {
+                if ($this->safePreg($pattern, $path)) {
                     $include = array_merge($include, $rule);
                 }
             }
@@ -458,7 +458,7 @@ class XmlWriter
 
         foreach ($rules as $pattern => $rule) {
             if (preg_match('/^#.*#$/', $pattern)) {
-                if (@preg_match($pattern, $path)) {
+                if ($this->safePreg($pattern, $path)) {
                     $seo = array_merge($seo, $rule);
                 }
             } else {

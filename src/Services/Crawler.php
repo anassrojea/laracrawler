@@ -200,7 +200,7 @@ class Crawler
 
             $skip = false;
             foreach ($excludes as $pattern) {
-                if (@preg_match($pattern, $absolute)) {
+                if ($this->safePreg($pattern, $absolute)) {
                     $skip = true;
                     break;
                 }
