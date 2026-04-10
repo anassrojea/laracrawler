@@ -1,6 +1,6 @@
 {
     "name": "anassrojea/laracrawler",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Laravel sitemap generator and crawler package for SEO optimization. Supports multilingual sites, image/video indexing, link validation, priority scoring, and advanced crawling automation.",
     "keywords": [
         "laravel",
@@ -41,7 +41,7 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.0",
-        "illuminate/support": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
         "guzzlehttp/guzzle": "^7.0",
         "symfony/dom-crawler": "^5.0|^6.0|^7.0",
         "symfony/css-selector": "^5.0|^6.0|^7.0"
@@ -54,7 +54,7 @@
         }
     },
     "require-dev": {
-        "orchestra/testbench": "^9.17"
+        "orchestra/testbench": "^9.17|^10.0"
     },
     "scripts": {
         "test": "vendor/bin/phpunit --exclude-group smoke",
