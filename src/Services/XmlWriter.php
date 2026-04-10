@@ -277,7 +277,7 @@ class XmlWriter
         $client = new Client(config('sitemap.http.validate_alternates', [
             'timeout' => 10,
             'connect_timeout' => 5,
-            'verify'  => false,
+            'verify'  => true,
             'http_errors' => false,
         ]));
 
@@ -394,7 +394,6 @@ class XmlWriter
             }
         }
 
-        // dd($include, $url);
         return $include;
     }
 
