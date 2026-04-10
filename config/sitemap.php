@@ -224,7 +224,7 @@ return [
         'validate_links' => [
             'timeout'         => 10,
             'connect_timeout' => 5,
-            'verify'          => false,
+            'verify'          => true,
             'http_errors'     => false,
             'headers'         => [
                 'User-Agent' => 'LaracrawlerBot/1.0 (' . rtrim(config('sitemap.base_url'), '/') . ')',
@@ -233,7 +233,7 @@ return [
         'validate_alternates' => [
             'timeout'         => 5,
             'connect_timeout' => 1,
-            'verify'          => false,
+            'verify'          => true,
             'http_errors'     => false,
             'headers'         => [
                 'User-Agent' => 'LaracrawlerBot/1.0 (' . rtrim(config('sitemap.base_url'), '/') . ')',
